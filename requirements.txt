@@ -20,6 +20,7 @@ uvicorn[standard]>=0.32.0
 # Additional dependencies for production
 pydantic>=2.10.0
 pydantic-settings>=2.6.0
-
+# Testing and security
+colorama>=0.4.6  # For colored terminal output in tests
 # Security and CORS
 python-multipart>=0.0.18

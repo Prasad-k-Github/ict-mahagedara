@@ -6,6 +6,9 @@ from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
+# Security imports
+from security import message_validator, prompt_guard
+
 def main():
     # Load environment variables from .env file
     load_dotenv()
@@ -112,10 +115,24 @@ COMMUNICATION STYLE:
         if not user_input:
             continue
         
+        # Validate and sanitize user input
+        is_valid, sanitized_message, error_reason = message_validator.validate_message(user_input)
+        if not is_valid:
+            print(f"\n❌ Invalid input: {error_reason}")
+            print("Please try again with appropriate content.")
+            continue
+        
         try:
             # Send message using LangChain conversation
-            response = conversation.predict(input=user_input)
-            print(f"\nPrasad K. Gamage: {response}")
+            response = conversation.predict(input=sanitized_message)
+            
+            # Validate response
+            is_safe, validated_response = prompt_guard.validate_response(response)
+            if not is_safe:
+                print("\n⚠️ Response validation warning. Rephrasing...")
+                continue
+            
+            print(f"\nPrasad K. Gamage: {validated_response}")
         except Exception as e:
             error_msg = str(e)
             # Check for quota errors and try next model

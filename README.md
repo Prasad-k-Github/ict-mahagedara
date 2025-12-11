@@ -129,10 +129,25 @@ Student: I'm studying for A/L Combined Mathematics. Can you help me with calculu
 ## Technology Stack
 
 - **Backend**: FastAPI + LangChain + LangGraph
-- **AI Model**: Google Gemini 2.5 Flash
+- **AI Model**: Google Gemini (6-model automatic fallback)
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Features**: Markdown rendering, Syntax highlighting
 - **Memory**: LangChain ConversationBufferMemory
+- **Security**: Input validation, prompt injection detection, rate limiting
+
+## Security Features
+
+🔒 **Comprehensive Protection**
+- **Input Validation**: HTML escaping, length checks, sanitization
+- **Prompt Injection Detection**: 10+ attack pattern detection
+- **SQL/Command Injection**: Blocks malicious database and system commands
+- **Rate Limiting**: 20 requests/minute, 100 requests/hour per session
+- **Response Validation**: Prevents system information leakage
+- **Content Safety**: Multi-layer filtering for safe interactions
+
+See [backend/SECURITY.md](backend/SECURITY.md) for detailed security documentation.
+
+**Test Security**: Run `python scripts/test_security.py` to verify all protections.
 
 ## For Students
 

@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 import os
 from dotenv import load_dotenv
 from typing import List, Optional
+import time
 
 # LangChain imports
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -14,6 +15,9 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 
+# Security imports
+from security import message_validator, prompt_guard, rate_limiter
+
 # Load environment variables
 load_dotenv()
 
@@ -21,13 +25,6 @@ load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("GEMINI_API_KEY not found in environment variables")
-
-# Initialize FastAPI app
-app = FastAPI(
-    title="Prasad K Gamage AI Assistant API",
-    version="2.0.0",
-    description="LangChain & LangGraph powered AI assistant"
-)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -124,21 +121,32 @@ def switch_to_next_model():
         print("❌ All models exhausted!")
         return False
 
-# Pydantic models
+# Pydantic models with validation
 class ChatMessage(BaseModel):
-    message: str
+    """User message with validation"""
+    message: str = Field(..., min_length=1, max_length=5000, description="User message")
+    
+    @validator('message')
+    def validate_message_content(cls, v):
+        """Validate and sanitize message"""
+        if not v or not v.strip():
+            raise ValueError("Message cannot be empty")
+        return v.strip()
 
 class ChatResponse(BaseModel):
     response: str
     session_id: Optional[str] = None
+    model_used: Optional[str] = None
 
 class ChatHistory(BaseModel):
     role: str
     text: str
+    timestamp: Optional[float] = None
 
 class SessionResponse(BaseModel):
     session_id: str
     history: List[ChatHistory]
+    message_count: int = 0
 
 @app.get("/")
 async def root():
@@ -157,11 +165,29 @@ async def root():
     }
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(message: ChatMessage):
+async def chat(message: ChatMessage, request: Request):
     """
     Send a single message without maintaining session history (uses LangChain)
     Automatically switches models if quota is exceeded
+    Includes security validation and sanitization
     """
+    # Step 1: Rate limiting
+    client_ip = request.client.host
+    is_allowed, limit_reason = rate_limiter.check_rate_limit(client_ip)
+    if not is_allowed:
+        raise HTTPException(status_code=429, detail=limit_reason)
+    
+    # Step 2: Validate and sanitize message
+    is_valid, sanitized_message, error_reason = message_validator.validate_message(message.message)
+    if not is_valid:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid message: {error_reason}"
+        )
+    
+    # Step 3: Wrap message with prompt guard
+    guarded_message = prompt_guard.wrap_user_message(sanitized_message)
+    
     max_retries = len(AVAILABLE_MODELS)
     
     for attempt in range(max_retries):
@@ -169,12 +195,19 @@ async def chat(message: ChatMessage):
             llm = get_llm()
             messages = [
                 SystemMessage(content=SYSTEM_INSTRUCTION),
-                HumanMessage(content=message.message)
+                HumanMessage(content=guarded_message)
             ]
             response = llm.invoke(messages)
+            
+            # Step 4: Validate response
+            is_safe, validated_response = prompt_guard.validate_response(response.content)
+            if not is_safe:
+                raise HTTPException(status_code=500, detail="Response validation failed")
+            
             return ChatResponse(
-                response=response.content,
-                session_id=f"model:{AVAILABLE_MODELS[current_model_index]}"
+                response=validated_response,
+                session_id=f"stateless",
+                model_used=AVAILABLE_MODELS[current_model_index]
             )
         except Exception as e:
             error_msg = str(e)
@@ -185,11 +218,11 @@ async def chat(message: ChatMessage):
                 else:
                     raise HTTPException(
                         status_code=429,
-                        detail=f"All models exhausted. Please wait for quota reset. Last error: {error_msg}"
+                        detail=f"All models exhausted. Please wait for quota reset."
                     )
             else:
                 # Other errors
-                raise HTTPException(status_code=500, detail=error_msg)
+                raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
     
     raise HTTPException(status_code=500, detail="Failed after all retry attempts")
 
@@ -234,13 +267,35 @@ async def create_session():
     )
 
 @app.post("/chat/session/{session_id}", response_model=ChatResponse)
-async def chat_with_session(session_id: str, message: ChatMessage):
+async def chat_with_session(session_id: str, message: ChatMessage, request: Request):
     """
     Send a message within an existing chat session (LangChain powered)
     Automatically switches models and recreates session if quota is exceeded
+    Includes security validation and sanitization
     """
     if session_id not in chat_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Step 1: Rate limiting
+    is_allowed, limit_reason = rate_limiter.check_rate_limit(session_id)
+    if not is_allowed:
+        raise HTTPException(status_code=429, detail=limit_reason)
+    
+    # Step 2: Validate and sanitize message
+    is_valid, sanitized_message, error_reason = message_validator.validate_message(message.message)
+    if not is_valid:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid message: {error_reason}"
+        )
+    
+    # Step 3: Check session message limit
+    session = chat_sessions[session_id]
+    if len(session["memory"].chat_memory.messages) >= 100:
+        raise HTTPException(
+            status_code=400, 
+            detail="Session message limit reached (100 messages). Please create a new session."
+        )
     
     max_retries = len(AVAILABLE_MODELS)
     
@@ -250,11 +305,17 @@ async def chat_with_session(session_id: str, message: ChatMessage):
             chain = session["chain"]
             
             # Use LangChain to process message with memory
-            response = chain.predict(input=message.message)
+            response = chain.predict(input=sanitized_message)
+            
+            # Validate response
+            is_safe, validated_response = prompt_guard.validate_response(response)
+            if not is_safe:
+                raise HTTPException(status_code=500, detail="Response validation failed")
             
             return ChatResponse(
-                response=response,
-                session_id=session_id
+                response=validated_response,
+                session_id=session_id,
+                model_used=AVAILABLE_MODELS[current_model_index]
             )
         except Exception as e:
             error_msg = str(e)
@@ -284,11 +345,11 @@ async def chat_with_session(session_id: str, message: ChatMessage):
                 else:
                     raise HTTPException(
                         status_code=429,
-                        detail=f"All models exhausted. Please wait for quota reset. Last error: {error_msg}"
+                        detail=f"All models exhausted. Please wait for quota reset."
                     )
             else:
                 # Other errors
-                raise HTTPException(status_code=500, detail=error_msg)
+                raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
     
     raise HTTPException(status_code=500, detail="Failed after all retry attempts")
 
@@ -311,12 +372,14 @@ async def get_session_history(session_id: str):
         role = "user" if isinstance(msg, HumanMessage) else "assistant"
         history.append(ChatHistory(
             role=role,
-            text=msg.content
+            text=msg.content,
+            timestamp=time.time()
         ))
     
     return SessionResponse(
         session_id=session_id,
-        history=history
+        history=history,
+        message_count=len(history)
     )
 
 @app.delete("/chat/session/{session_id}")
