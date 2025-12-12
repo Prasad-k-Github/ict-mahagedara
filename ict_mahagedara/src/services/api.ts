@@ -114,7 +114,7 @@ export const chatApi = {
 // Profile APIs
 export const profileApi = {
   getProfile: async (): Promise<User> => {
-    const response = await fetch(`${API_URL}/profile/me`, {
+    const response = await fetch(`${API_URL}/auth/me`, {
       headers: getAuthHeaders(),
     });
 
@@ -140,13 +140,14 @@ export const profileApi = {
     return response.json();
   },
 
-  changePassword: async (currentPassword: string, newPassword: string): Promise<{ message: string }> => {
+  changePassword: async (currentPassword: string, newPassword: string, confirmPassword: string): Promise<{ message: string }> => {
     const response = await fetch(`${API_URL}/profile/change-password`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({
         current_password: currentPassword,
         new_password: newPassword,
+        confirm_password: confirmPassword,
       }),
     });
 
