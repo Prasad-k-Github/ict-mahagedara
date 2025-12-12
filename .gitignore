@@ -35,6 +35,10 @@ venv.bak/
 .env.local
 .env.*.local
 
+# Postman
+*.postman_collection.json
+*.postman_environment.json
+
 # IDE
 .vscode/
 .idea/
