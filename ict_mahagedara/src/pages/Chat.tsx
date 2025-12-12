@@ -136,10 +136,6 @@ export default function Chat() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    navigate('/login');
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -230,13 +226,6 @@ export default function Chat() {
             >
               Profile
             </Link>
-            
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-200 hover:text-white font-medium"
-            >
-              Logout
-            </button>
           </div>
         </div>
       </header>
