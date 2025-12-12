@@ -115,6 +115,23 @@
         opacity: 0.9;
       }
 
+      .profile-btn {
+        padding: 6px 16px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .profile-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
       .logout-btn {
         padding: 6px 16px;
         background: rgba(255, 255, 255, 0.2);
@@ -387,6 +404,7 @@
         </div>
         <div class="user-info">
           <span class="user-name" id="userName">Guest</span>
+          <a href="profile.html" class="profile-btn">👤 Profile</a>
           <button class="logout-btn" id="logoutBtn">Logout</button>
         </div>
       </div>

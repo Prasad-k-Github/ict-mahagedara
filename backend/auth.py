@@ -128,6 +128,84 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class UserProfileUpdate(BaseModel):
+    """User profile update request"""
+    first_name: Optional[str] = Field(None, min_length=1, max_length=50)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=50)
+    phone_number: Optional[str] = Field(None, min_length=10, max_length=20)
+    birthday: Optional[date] = None
+    gender: Optional[str] = None
+    grade_level: Optional[int] = Field(None, ge=1, le=12)
+    language: Optional[str] = None
+    
+    @validator('first_name', 'last_name')
+    def validate_names(cls, v):
+        if v is not None:
+            if not v.strip():
+                raise ValueError("Name cannot be empty")
+            return v.strip().title()
+        return v
+    
+    @validator('phone_number')
+    def validate_phone(cls, v):
+        if v is not None:
+            cleaned = v.replace(' ', '').replace('-', '')
+            if not cleaned.isdigit():
+                raise ValueError("Phone number must contain only digits")
+            if len(cleaned) < 10:
+                raise ValueError("Phone number must be at least 10 digits")
+            return cleaned
+        return v
+    
+    @validator('birthday')
+    def validate_birthday(cls, v):
+        if v is not None:
+            if not isinstance(v, date):
+                raise ValueError("Invalid date format")
+            today = date.today()
+            age = today.year - v.year - ((today.month, today.day) < (v.month, v.day))
+            if age < 5:
+                raise ValueError("User must be at least 5 years old")
+            if age > 100:
+                raise ValueError("Invalid birth date")
+            if v > today:
+                raise ValueError("Birth date cannot be in the future")
+        return v
+    
+    @validator('gender')
+    def validate_gender(cls, v):
+        if v is not None:
+            allowed_genders = ['Male', 'Female']
+            if v not in allowed_genders:
+                raise ValueError(f"Gender must be one of: {', '.join(allowed_genders)}")
+        return v
+    
+    @validator('language')
+    def validate_language(cls, v):
+        if v is not None:
+            allowed_languages = ['Sinhala', 'English', 'Tamil']
+            if v not in allowed_languages:
+                raise ValueError(f"Language must be one of: {', '.join(allowed_languages)}")
+        return v
+
+class PasswordChange(BaseModel):
+    """Password change request"""
+    current_password: str = Field(..., min_length=6)
+    new_password: str = Field(..., min_length=6, max_length=100)
+    confirm_password: str = Field(..., min_length=6, max_length=100)
+    
+    @validator('new_password')
+    def validate_password(cls, v):
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters long")
+        return v
+    
+    @validator('confirm_password')
+    def validate_passwords_match(cls, v, values):
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError("Passwords do not match")
+        return v
+
 # Password Hashing Functions
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt"""
@@ -169,10 +247,15 @@ def decode_access_token(token: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired"
         )
-    except jwt.JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token validation failed: {str(e)}"
         )
 
 # Authentication Functions
@@ -242,27 +325,37 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     """Get current authenticated user from JWT token"""
-    token = credentials.credentials
-    payload = decode_access_token(token)
-    
-    user_id: int = payload.get("user_id")
-    if user_id is None:
+    try:
+        token = credentials.credentials
+        print(f"Received token: {token[:20]}...")  # Debug log
+        payload = decode_access_token(token)
+        
+        user_id: int = payload.get("user_id")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials - no user_id in token"
+            )
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is disabled"
+            )
+        
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Auth error: {str(e)}")  # Debug log
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials"
+            detail=f"Authentication failed: {str(e)}"
         )
-    
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
-        )
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is disabled"
-        )
-    
-    return user

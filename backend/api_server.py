@@ -23,9 +23,9 @@ from security import message_validator, prompt_guard, rate_limiter
 # Database and Authentication imports
 from database import get_db, create_tables, test_connection, User
 from auth import (
-    UserRegister, UserLogin, Token, UserResponse,
+    UserRegister, UserLogin, Token, UserResponse, UserProfileUpdate, PasswordChange,
     register_user, authenticate_user, get_current_user,
-    create_access_token
+    create_access_token, hash_password, verify_password
 )
 
 # Load environment variables
@@ -175,6 +175,11 @@ async def root():
             "POST /auth/register": "Register a new user",
             "POST /auth/login": "Login and get access token",
             "GET /auth/me": "Get current user info (requires auth)",
+            "PUT /profile/update": "Update user profile (requires auth)",
+            "GET /profile/{user_id}": "Get user profile by ID (requires auth)",
+            "DELETE /profile/delete": "Deactivate user account (requires auth)",
+            "POST /profile/change-password": "Change user password (requires auth)",
+            "GET /profile/stats": "Get account statistics (requires auth)",
             "POST /chat": "Send a message (stateless)",
             "POST /chat/session": "Create a new chat session",
             "POST /chat/session/{session_id}": "Send message in a session",
@@ -250,6 +255,224 @@ async def get_me(current_user: User = Depends(get_current_user)):
     Requires: Bearer token in Authorization header
     """
     return current_user
+
+# ==================== USER PROFILE CRUD ENDPOINTS ====================
+
+@app.put("/profile/update", response_model=UserResponse)
+async def update_profile(
+    profile_data: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update current user's profile information
+    
+    - **first_name**: First name (optional)
+    - **last_name**: Last name (optional)
+    - **phone_number**: Phone number (optional)
+    - **birthday**: Birth date (optional)
+    - **gender**: Gender - Male or Female (optional)
+    - **grade_level**: Grade level 1-12 (optional)
+    - **language**: Preferred language - Sinhala, English, or Tamil (optional)
+    
+    Only provided fields will be updated
+    Requires: Bearer token in Authorization header
+    """
+    try:
+        # Update only provided fields
+        update_data = profile_data.model_dump(exclude_unset=True)
+        
+        # Check if phone number is being changed and is already in use
+        if 'phone_number' in update_data and update_data['phone_number'] != current_user.phone_number:
+            existing_phone = db.query(User).filter(
+                User.phone_number == update_data['phone_number'],
+                User.id != current_user.id
+            ).first()
+            if existing_phone:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Phone number already in use by another account"
+                )
+        
+        # Update user fields
+        for field, value in update_data.items():
+            setattr(current_user, field, value)
+        
+        db.commit()
+        db.refresh(current_user)
+        
+        return current_user
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update profile: {str(e)}"
+        )
+
+@app.get("/profile/{user_id}", response_model=UserResponse)
+async def get_user_profile(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get a specific user's profile by ID
+    
+    - **user_id**: User ID to retrieve
+    
+    Requires: Bearer token in Authorization header
+    Note: Can only view your own profile for privacy
+    """
+    try:
+        # Only allow users to view their own profile
+        if current_user.id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only view your own profile"
+            )
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        return user
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve profile: {str(e)}"
+        )
+
+@app.delete("/profile/delete")
+async def delete_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete (deactivate) current user's account
+    
+    This will deactivate the account rather than permanently delete it
+    The account can be reactivated by contacting support
+    
+    Requires: Bearer token in Authorization header
+    """
+    try:
+        # Soft delete - deactivate account instead of hard delete
+        current_user.is_active = False
+        db.commit()
+        
+        return {
+            "message": "Account deactivated successfully",
+            "detail": "Your account has been deactivated. Contact support to reactivate.",
+            "user_id": current_user.id
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to deactivate account: {str(e)}"
+        )
+
+@app.post("/profile/change-password")
+async def change_password(
+    password_data: PasswordChange,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Change current user's password
+    
+    - **current_password**: Current password for verification
+    - **new_password**: New password (minimum 6 characters)
+    - **confirm_password**: Confirm new password
+    
+    Requires: Bearer token in Authorization header
+    """
+    try:
+        # Verify current password
+        if not verify_password(password_data.current_password, current_user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect"
+            )
+        
+        # Check that new password is different from current
+        if verify_password(password_data.new_password, current_user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be different from current password"
+            )
+        
+        # Update password
+        current_user.hashed_password = hash_password(password_data.new_password)
+        db.commit()
+        
+        return {
+            "message": "Password changed successfully",
+            "detail": "Your password has been updated"
+        }
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to change password: {str(e)}"
+        )
+
+@app.get("/profile/stats")
+async def get_profile_stats(current_user: User = Depends(get_current_user)):
+    """
+    Get current user's account statistics
+    
+    Returns account age, grade level, and other useful stats
+    Requires: Bearer token in Authorization header
+    """
+    try:
+        # Calculate account age
+        account_age_days = (datetime.utcnow() - current_user.created_at).days
+        
+        # Calculate user age
+        today = date.today()
+        user_age = today.year - current_user.birthday.year - (
+            (today.month, today.day) < (current_user.birthday.month, current_user.birthday.day)
+        )
+        
+        stats = {
+            "user_id": current_user.id,
+            "full_name": f"{current_user.first_name} {current_user.last_name}",
+            "age": user_age,
+            "grade_level": current_user.grade_level,
+            "preferred_language": current_user.language,
+            "account_created": current_user.created_at.isoformat() if current_user.created_at else None,
+            "account_age_days": account_age_days,
+            "last_login": current_user.last_login.isoformat() if current_user.last_login else None,
+            "account_status": "Active" if current_user.is_active else "Inactive",
+            "verified": current_user.is_verified
+        }
+        
+        print(f"Stats response: {stats}")  # Debug log
+        return stats
+        
+    except Exception as e:
+        print(f"Stats error: {str(e)}")  # Debug log
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve stats: {str(e)}"
+        )
 
 # ==================== CHAT ENDPOINTS ====================
 
