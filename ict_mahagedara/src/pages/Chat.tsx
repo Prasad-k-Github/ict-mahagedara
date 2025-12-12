@@ -8,12 +8,21 @@ import 'highlight.js/styles/github-dark.css';
 export default function Chat() {
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const vantaEffect = useRef<any>(null);
   const [user, setUser] = useState<User | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentMode, setCurrentMode] = useState<'session' | 'stateless'>('session');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const suggestedPrompts = [
+    "Explain a concept in simple terms",
+    "Help me solve a math problem",
+    "Teach me about science",
+    "Practice English conversation"
+  ];
 
   useEffect(() => {
     checkAuth();
@@ -23,6 +32,57 @@ export default function Chat() {
     scrollToBottom();
     highlightCode();
   }, [messages]);
+
+  useEffect(() => {
+    let mounted = true;
+    
+    const initVanta = () => {
+      if (!mounted) return;
+      
+      const THREE = (window as any).THREE;
+      const VANTA = (window as any).VANTA;
+      
+      if (THREE && VANTA && VANTA.NET && vantaRef.current && !vantaEffect.current) {
+        try {
+          vantaEffect.current = VANTA.NET({
+            el: vantaRef.current,
+            THREE: THREE,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0xff6b35,
+            backgroundColor: 0x23153c,
+            points: 8.00,
+            maxDistance: 20.00,
+            spacing: 15.00
+          });
+        } catch (error) {
+          console.error('Vanta NET initialization error:', error);
+        }
+      } else if (mounted) {
+        // Retry after a short delay if libraries aren't loaded yet
+        setTimeout(initVanta, 100);
+      }
+    };
+    
+    initVanta();
+    
+    return () => {
+      mounted = false;
+      if (vantaEffect.current) {
+        try {
+          vantaEffect.current.destroy();
+        } catch (error) {
+          console.error('Vanta NET cleanup error:', error);
+        }
+        vantaEffect.current = null;
+      }
+    };
+  }, []);
 
   const checkAuth = async () => {
     const token = localStorage.getItem('access_token');
@@ -46,11 +106,6 @@ export default function Chat() {
     try {
       const { session_id } = await chatApi.createSession();
       setSessionId(session_id);
-      setMessages([{
-        role: 'assistant',
-        content: 'Hello! I\'m Prasad K. Gamage, your AI learning assistant. How can I help you today?',
-        isMarkdown: false
-      }]);
     } catch (error) {
       console.error('Failed to initialize session:', error);
       showError('Failed to initialize chat session');
@@ -111,181 +166,198 @@ export default function Chat() {
     }
   };
 
+  const handleSuggestedPrompt = (prompt: string) => {
+    setInputMessage(prompt);
+  };
+
   return (
-    <div className="min-h-screen gradient-mesh flex items-center justify-center p-4 md:p-6">
-      <div className="w-full max-w-6xl h-[90vh] glass rounded-3xl shadow-premium-lg flex flex-col overflow-hidden animate-slide-up">
-        {/* Premium Header */}
-        <div className="relative bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-600 text-white px-6 py-5 flex justify-between items-center shadow-lg">
-          <div className="absolute inset-0 shimmer opacity-20"></div>
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/30 shadow-glow">
-              <span className="text-2xl">🇱🇰</span>
+    <div className="min-h-screen bg-transparent relative overflow-hidden">
+      {/* Vanta NET Background */}
+      <div ref={vantaRef} className="fixed inset-0 z-0"></div>
+
+      {/* Gemini-style Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-purple-900/30 backdrop-blur-md border-b border-purple-500/30">
+        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">🇱🇰</span>
             </div>
-            <div>
-              <h1 className="text-xl font-display font-bold tracking-tight">Prasad K. Gamage</h1>
-              <p className="text-xs text-white/80 font-medium">Your AI Learning Assistant</p>
-            </div>
+            <h1 className="text-xl font-semibold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+              Learning Assistant
+            </h1>
           </div>
-          <div className="relative z-10 flex items-center gap-3 text-sm">
+          
+          <div className="flex items-center gap-4">
+            {/* Mode Toggle */}
+            <div className="flex items-center gap-2 bg-purple-800/50 rounded-full p-1">
+              <button
+                onClick={() => handleModeChange('session')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  currentMode === 'session'
+                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-sm'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                Session
+              </button>
+              <button
+                onClick={() => handleModeChange('stateless')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  currentMode === 'stateless'
+                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-sm'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                Stateless
+              </button>
+            </div>
+
             {user && (
-              <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
-                <div className="w-8 h-8 bg-gradient-to-br from-white/30 to-white/10 rounded-full flex items-center justify-center font-semibold">
+              <div className="flex items-center gap-2 text-sm text-white">
+                <span className="hidden md:inline">{user.first_name}</span>
+                <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {user.first_name.charAt(0)}
                 </div>
-                <span className="font-medium">Welcome, {user.first_name}!</span>
               </div>
             )}
+            
             <Link
               to="/profile"
-              className="px-5 py-2.5 bg-white/15 backdrop-blur-sm border border-white/25 rounded-xl hover:bg-white/25 hover:shadow-glow transition-all duration-300 font-medium"
+              className="text-sm text-gray-200 hover:text-white font-medium"
             >
               Profile
             </Link>
+            
             <button
               onClick={handleLogout}
-              className="px-5 py-2.5 bg-white/15 backdrop-blur-sm border border-white/25 rounded-xl hover:bg-white/25 hover:shadow-glow transition-all duration-300 font-medium"
+              className="text-sm text-gray-200 hover:text-white font-medium"
             >
               Logout
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Mode Selection */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 px-6 py-4 flex gap-3 border-b border-gray-200/50 backdrop-blur-sm">
-          <button
-            onClick={() => handleModeChange('session')}
-            className={`group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-              currentMode === 'session'
-                ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-premium transform scale-105'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-primary-300 hover:shadow-md'
-            }`}
-          >
-            {currentMode === 'session' && (
-              <div className="absolute inset-0 shimmer opacity-30 rounded-xl"></div>
-            )}
-            <span className="relative z-10 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              Session Mode
-            </span>
-          </button>
-          <button
-            onClick={() => handleModeChange('stateless')}
-            className={`group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-              currentMode === 'stateless'
-                ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-premium transform scale-105'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-primary-300 hover:shadow-md'
-            }`}
-          >
-            {currentMode === 'stateless' && (
-              <div className="absolute inset-0 shimmer opacity-30 rounded-xl"></div>
-            )}
-            <span className="relative z-10 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Stateless Mode
-            </span>
-          </button>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5 custom-scrollbar bg-gradient-to-b from-gray-50/30 to-transparent">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex gap-3 animate-slide-in ${
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
-            >
-              {message.role === 'assistant' && (
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-              )}
-              <div
-                className={`max-w-[75%] px-5 py-4 rounded-2xl shadow-md transition-all duration-300 hover:shadow-lg ${
-                  message.role === 'user'
-                    ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-tr-sm'
-                    : 'bg-white text-gray-800 border border-gray-100 rounded-tl-sm'
-                }`}
-              >
-                {message.isMarkdown ? (
-                  <div
-                    className="message-content prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }}
-                  />
-                ) : (
-                  <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                )}
+      {/* Main Content */}
+      <main className="pt-16 min-h-screen flex flex-col relative z-10">
+        <div className="flex-1 w-full max-w-3xl mx-auto px-6 pb-32">
+          {messages.length === 0 ? (
+            /* Welcome Screen */
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-16rem)] text-center">
+              <div className="mb-12">
+                <h2 className="text-5xl font-semibold mb-4 bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                  Hello, {user?.first_name || 'there'}
+                </h2>
+                <p className="text-xl text-gray-300">How can I help you today?</p>
               </div>
-              {message.role === 'user' && (
-                <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              )}
+
+              {/* Suggested Prompts */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+                {suggestedPrompts.map((prompt, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestedPrompt(prompt)}
+                    className="p-4 text-left rounded-2xl border border-purple-500/30 bg-purple-900/20 hover:bg-purple-800/40 transition-all duration-200 hover:shadow-lg hover:border-orange-500/50 group backdrop-blur-sm"
+                  >
+                    <p className="text-gray-200 group-hover:text-white">{prompt}</p>
+                  </button>
+                ))}
+              </div>
             </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex gap-3 animate-fade-in">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <div className="bg-white px-6 py-4 rounded-2xl shadow-md border border-gray-100">
-                <div className="flex gap-2">
-                  <div className="w-2.5 h-2.5 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full animate-bounce"></div>
-                  <div className="w-2.5 h-2.5 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full animate-bounce animate-delay-100"></div>
-                  <div className="w-2.5 h-2.5 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full animate-bounce animate-delay-200"></div>
+          ) : (
+            /* Messages */
+            <div className="py-8 space-y-8">
+              {messages.map((message, index) => (
+                <div key={index} className="animate-fade-in">
+                  {message.role === 'user' ? (
+                    /* User Message */
+                    <div className="flex gap-4 items-start justify-end">
+                      <div className="flex-1 pt-1 text-right">
+                        <div className="inline-block max-w-[80%] bg-gradient-to-r from-red-500 to-orange-500 text-white px-5 py-3 rounded-3xl text-left">
+                          <p className="text-lg">{message.content}</p>
+                        </div>
+                      </div>
+                      <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                        {user?.first_name.charAt(0) || 'U'}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Assistant Message */
+                    <div className="flex gap-4 items-start">
+                      <div className="w-8 h-8 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        {message.isMarkdown ? (
+                          <div
+                            className="prose prose-lg max-w-none prose-headings:text-white prose-headings:font-semibold prose-p:text-gray-200 prose-p:leading-relaxed prose-a:text-orange-400 prose-strong:text-white prose-code:text-sm prose-code:bg-purple-900/50 prose-code:text-orange-300 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100"
+                            dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }}
+                          />
+                        ) : (
+                          <p className="text-gray-200 text-lg leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ))}
+
+              {/* Loading Indicator */}
+              {isLoading && (
+                <div className="flex gap-4 items-start animate-fade-in">
+                  <div className="w-8 h-8 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce animate-delay-100"></div>
+                      <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce animate-delay-200"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
             </div>
           )}
-          
-          <div ref={messagesEndRef} />
         </div>
 
-        {/* Premium Input */}
-        <form onSubmit={handleSubmit} className="p-6 border-t border-gray-200/50 bg-white/80 backdrop-blur-sm">
-          <div className="flex gap-3 items-end">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Type your message here..."
-                disabled={isLoading}
-                className="w-full px-6 py-4 pr-12 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 transition-all duration-300 disabled:bg-gray-50 disabled:text-gray-400 text-base shadow-sm hover:border-gray-300"
-              />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
+        {/* Fixed Input at Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-purple-900/80 via-purple-900/60 to-transparent py-6 z-20 backdrop-blur-sm">
+          <div className="max-w-3xl mx-auto px-6">
+            <form onSubmit={handleSubmit} className="relative">
+              <div className="flex items-center gap-3 bg-purple-800/40 rounded-full border border-purple-500/30 shadow-lg hover:shadow-xl hover:border-orange-500/50 transition-all duration-200 px-6 py-4 backdrop-blur-md">
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder="Ask me anything..."
+                  disabled={isLoading}
+                  className="flex-1 bg-transparent border-none outline-none text-white placeholder-gray-400 text-base disabled:opacity-50"
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || !inputMessage.trim()}
+                  aria-label="Send message"
+                  className="p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md transition-all duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
               </div>
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading || !inputMessage.trim()}
-              className="relative group px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl font-semibold hover:from-primary-600 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-premium hover:shadow-premium-lg hover:-translate-y-0.5 disabled:transform-none overflow-hidden"
-            >
-              <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-20"></div>
-              <span className="relative z-10 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                Send
-              </span>
-            </button>
+            </form>
+            <p className="text-xs text-gray-400 text-center mt-3">
+              AI can make mistakes. Check important info.
+            </p>
           </div>
-        </form>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
