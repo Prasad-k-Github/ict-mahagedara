@@ -43,7 +43,7 @@ export default function Login() {
     try {
       const response = await authApi.login(loginData);
       localStorage.setItem('access_token', response.access_token);
-      navigate('/');
+      navigate('/chat');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -80,7 +80,7 @@ export default function Login() {
       const response = await authApi.register(dataToSend);
       setSuccess('Registration successful! Redirecting...');
       localStorage.setItem('access_token', response.access_token);
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => navigate('/chat'), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -139,8 +139,8 @@ export default function Login() {
             scale: 1.00,
             scaleMobile: 1.00,
             color: 0xff6b35,
-            backgroundColor: 0x23153c,
-            points: 8.00,
+            backgroundColor: 0x1a0a0a,
+            points: 10.00,
             maxDistance: 20.00,
             spacing: 15.00
           });

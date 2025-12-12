@@ -1,0 +1,556 @@
+{
+	"info": {
+		"_postman_id": "prasad-learning-assistant-api",
+		"name": "Prasad K. Gamage Learning Assistant API",
+		"description": "Complete API collection for the Learning Assistant with authentication, profile management, and chat features",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"user_id\", jsonData.id);",
+									"    pm.environment.set(\"user_email\", jsonData.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone_number\": \"0771234567\",\n  \"birthday\": \"2005-01-15\",\n  \"gender\": \"Male\",\n  \"grade_level\": 10,\n  \"language\": \"English\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"access_token\", jsonData.access_token);",
+									"    pm.environment.set(\"user_id\", jsonData.user_id);",
+									"    pm.environment.set(\"username\", jsonData.username);",
+									"    pm.environment.set(\"user_email\", jsonData.email);",
+									"    console.log(\"Token saved: \" + jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login and get access token"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "Get current authenticated user's information"
+					},
+					"response": []
+				}
+			],
+			"description": "User registration, login, and authentication endpoints"
+		},
+		{
+			"name": "Profile Management",
+			"item": [
+				{
+					"name": "Update Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"phone_number\": \"0779876543\",\n  \"grade_level\": 11,\n  \"language\": \"Sinhala\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/profile/update",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile",
+								"update"
+							]
+						},
+						"description": "Update current user's profile. All fields are optional."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/profile/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile",
+								"{{user_id}}"
+							]
+						},
+						"description": "Get a specific user's profile by user ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile Stats",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/profile/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile",
+								"stats"
+							]
+						},
+						"description": "Get current user's account statistics"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"current_password\": \"password123\",\n  \"new_password\": \"newpassword456\",\n  \"confirm_password\": \"newpassword456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/profile/change-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile",
+								"change-password"
+							]
+						},
+						"description": "Change current user's password"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/profile/delete",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile",
+								"delete"
+							]
+						},
+						"description": "Deactivate current user's account (soft delete)"
+					},
+					"response": []
+				}
+			],
+			"description": "User profile CRUD operations"
+		},
+		{
+			"name": "Chat",
+			"item": [
+				{
+					"name": "Send Chat Message",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"What is the Pythagorean theorem?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat"
+							]
+						},
+						"description": "Send a chat message without session (stateless)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Chat Session",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"session_id\", jsonData.session_id);",
+									"    console.log(\"Session ID saved: \" + jsonData.session_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/chat/session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat",
+								"session"
+							]
+						},
+						"description": "Create a new chat session"
+					},
+					"response": []
+				},
+				{
+					"name": "Send Message in Session",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Can you explain it in simpler terms?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat/session/{{session_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat",
+								"session",
+								"{{session_id}}"
+							]
+						},
+						"description": "Send a message in an existing chat session (maintains conversation history)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Session History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/chat/session/{{session_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat",
+								"session",
+								"{{session_id}}"
+							]
+						},
+						"description": "Get chat history for a specific session"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Session",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/chat/session/{{session_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat",
+								"session",
+								"{{session_id}}"
+							]
+						},
+						"description": "Delete a chat session and its history"
+					},
+					"response": []
+				}
+			],
+			"description": "Chat endpoints for interacting with the AI tutor"
+		},
+		{
+			"name": "System",
+			"item": [
+				{
+					"name": "Root",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Get API welcome message and available endpoints"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check API health status"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Models Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/models",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"models"
+							]
+						},
+						"description": "Get information about available AI models"
+					},
+					"response": []
+				}
+			],
+			"description": "System and utility endpoints"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}
