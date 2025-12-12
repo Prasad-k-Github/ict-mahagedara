@@ -46,7 +46,11 @@ export default function Chat() {
     try {
       const { session_id } = await chatApi.createSession();
       setSessionId(session_id);
-      addMessage('assistant', 'Hello! I\'m Prasad K. Gamage, your AI learning assistant. How can I help you today?');
+      setMessages([{
+        role: 'assistant',
+        content: 'Hello! I\'m Prasad K. Gamage, your AI learning assistant. How can I help you today?',
+        isMarkdown: false
+      }]);
     } catch (error) {
       console.error('Failed to initialize session:', error);
       showError('Failed to initialize chat session');
