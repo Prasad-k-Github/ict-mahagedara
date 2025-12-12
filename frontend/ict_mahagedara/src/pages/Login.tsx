@@ -115,144 +115,175 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center p-5">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white py-8 px-5 text-center">
-          <h1 className="text-2xl font-bold mb-2">🇱🇰 Prasad K. Gamage</h1>
-          <p className="text-sm opacity-90">Learning Assistant for Sri Lankan Students</p>
+    <div className="min-h-screen gradient-mesh flex items-center justify-center p-4 md:p-6">
+      <div className="glass rounded-3xl shadow-premium-lg w-full max-w-md overflow-hidden animate-slide-up">
+        {/* Premium Header */}
+        <div className="relative bg-gradient-to-br from-primary-600 via-primary-500 to-secondary-600 text-white py-12 px-6 text-center overflow-hidden">
+          <div className="absolute inset-0 shimmer opacity-20"></div>
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-16 -translate-x-16 blur-3xl"></div>
+          <div className="relative z-10">
+            <div className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center border border-white/30 shadow-glow animate-float">
+              <span className="text-4xl">🇱🇰</span>
+            </div>
+            <h1 className="text-3xl font-display font-bold mb-2 tracking-tight">Prasad K. Gamage</h1>
+            <p className="text-sm text-white/90 font-medium">AI Learning Assistant for Sri Lankan Students</p>
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex bg-gray-100 border-b-2 border-gray-300">
+        {/* Premium Tabs */}
+        <div className="flex bg-gray-50/80 backdrop-blur-sm">
           <button
             onClick={() => { setActiveTab('login'); setError(''); setSuccess(''); }}
-            className={`flex-1 py-4 text-center font-semibold transition-all ${
+            className={`relative flex-1 py-5 text-center font-semibold transition-all duration-300 ${
               activeTab === 'login'
-                ? 'bg-white text-primary-500 border-b-3 border-primary-500'
-                : 'text-gray-600'
+                ? 'bg-white text-primary-600 shadow-md'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
             }`}
           >
-            Login
+            {activeTab === 'login' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-t-full"></div>
+            )}
+            <span className="relative z-10">Login</span>
           </button>
           <button
             onClick={() => { setActiveTab('register'); setError(''); setSuccess(''); }}
-            className={`flex-1 py-4 text-center font-semibold transition-all ${
+            className={`relative flex-1 py-5 text-center font-semibold transition-all duration-300 ${
               activeTab === 'register'
-                ? 'bg-white text-primary-500 border-b-3 border-primary-500'
-                : 'text-gray-600'
+                ? 'bg-white text-primary-600 shadow-md'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
             }`}
           >
-            Register
+            {activeTab === 'register' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-t-full"></div>
+            )}
+            <span className="relative z-10">Register</span>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-8 bg-white">
           {error && (
-            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">
-              {error}
+            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-5 py-4 rounded-xl mb-6 text-sm flex items-start gap-3 animate-slide-in shadow-sm">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-lg mb-5 text-sm">
-              {success}
+            <div className="bg-green-50 border-l-4 border-green-500 text-green-700 px-5 py-4 rounded-xl mb-6 text-sm flex items-start gap-3 animate-slide-in shadow-sm">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>{success}</span>
             </div>
           )}
 
           {/* Login Form */}
           {activeTab === 'login' && (
-            <form onSubmit={handleLogin}>
-              <div className="mb-5">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">Email</label>
-                <input
-                  type="email"
-                  required
-                  value={loginData.email}
-                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
-                  placeholder="your.email@example.com"
-                />
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label className="block mb-2 font-semibold text-gray-800 text-sm">Email Address</label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    required
+                    value={loginData.email}
+                    onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                    className="w-full px-5 py-4 pl-12 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300"
+                    placeholder="your.email@example.com"
+                  />
+                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
               </div>
 
-              <div className="mb-5">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">Password</label>
-                <input
-                  type="password"
-                  required
-                  value={loginData.password}
-                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
-                  placeholder="Enter your password"
-                />
+              <div>
+                <label className="block mb-2 font-semibold text-gray-800 text-sm">Password</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    required
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                    className="w-full px-5 py-4 pl-12 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300"
+                    placeholder="Enter your password"
+                  />
+                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-br from-primary-500 to-secondary-500 text-white rounded-lg text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                className="relative group w-full py-4 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 text-white rounded-xl text-base font-semibold transition-all duration-300 hover:shadow-premium hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none overflow-hidden shadow-md"
               >
-                {loading ? 'Logging in...' : 'Login'}
+                <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-30"></div>
+                <span className="relative z-10">{loading ? 'Logging in...' : 'Login to Continue'}</span>
               </button>
             </form>
           )}
 
           {/* Register Form */}
           {activeTab === 'register' && (
-            <form onSubmit={handleRegister} className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="first-name" className="block mb-2 font-semibold text-gray-700 text-sm">First Name *</label>
+                  <label htmlFor="first-name" className="block mb-2 font-semibold text-gray-800 text-sm">First Name *</label>
                   <input
                     id="first-name"
                     type="text"
                     required
                     value={registerData.first_name}
                     onChange={(e) => setRegisterData({ ...registerData, first_name: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300"
                   />
                 </div>
                 <div>
-                  <label htmlFor="last-name" className="block mb-2 font-semibold text-gray-700 text-sm">Last Name *</label>
+                  <label htmlFor="last-name" className="block mb-2 font-semibold text-gray-800 text-sm">Last Name *</label>
                   <input
                     id="last-name"
                     type="text"
                     required
                     value={registerData.last_name}
                     onChange={(e) => setRegisterData({ ...registerData, last_name: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="register-email" className="block mb-2 font-semibold text-gray-700 text-sm">Email *</label>
+                <label htmlFor="register-email" className="block mb-2 font-semibold text-gray-800 text-sm">Email *</label>
                 <input
                   id="register-email"
                   type="email"
                   required
                   value={registerData.email}
                   onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300"
                 />
               </div>
 
               <div>
-                <label htmlFor="phone-number" className="block mb-2 font-semibold text-gray-700 text-sm">Phone Number *</label>
+                <label htmlFor="phone-number" className="block mb-2 font-semibold text-gray-800 text-sm">Phone Number *</label>
                 <input
                   id="phone-number"
                   type="tel"
                   required
                   value={registerData.phone_number}
                   onChange={(e) => setRegisterData({ ...registerData, phone_number: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300"
                   placeholder="07XXXXXXXX"
                 />
               </div>
 
               <div>
-                <label htmlFor="register-password" className="block mb-2 font-semibold text-gray-700 text-sm">Password *</label>
+                <label htmlFor="register-password" className="block mb-2 font-semibold text-gray-800 text-sm">Password *</label>
                 <input
                   id="register-password"
                   type="password"
@@ -262,44 +293,58 @@ export default function Login() {
                     setRegisterData({ ...registerData, password: e.target.value });
                     checkPasswordStrength(e.target.value);
                   }}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300"
                 />
                 {registerData.password && (
-                  <div className="mt-2">
-                    <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-                      <div className={`h-full transition-all ${getStrengthColor()} ${getStrengthWidth()}`}></div>
+                  <div className="mt-3">
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full transition-all duration-500 ${getStrengthColor()} ${getStrengthWidth()}`}></div>
                     </div>
-                    <p className="text-xs mt-1 text-gray-600">{getStrengthText()}</p>
+                    <p className="text-xs mt-1.5 font-medium text-gray-600">{getStrengthText()}</p>
                   </div>
                 )}
               </div>
 
               <div>
-                <label htmlFor="confirm-password" className="block mb-2 font-semibold text-gray-700 text-sm">Confirm Password *</label>
+                <label htmlFor="confirm-password" className="block mb-2 font-semibold text-gray-800 text-sm">Confirm Password *</label>
                 <input
                   id="confirm-password"
                   type="password"
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300"
                 />
                 {confirmPassword && (
-                  <p className={`text-xs mt-1 ${registerData.password === confirmPassword ? 'text-green-600' : 'text-red-600'}`}>
-                    {registerData.password === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
+                  <p className={`text-xs mt-2 font-medium flex items-center gap-1.5 ${registerData.password === confirmPassword ? 'text-green-600' : 'text-red-600'}`}>
+                    {registerData.password === confirmPassword ? (
+                      <>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Passwords match
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        Passwords do not match
+                      </>
+                    )}
                   </p>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="grade" className="block mb-2 font-semibold text-gray-700 text-sm">Grade *</label>
+                  <label htmlFor="grade" className="block mb-2 font-semibold text-gray-800 text-sm">Grade *</label>
                   <select
                     id="grade"
                     required
                     value={registerData.grade_level}
                     onChange={(e) => setRegisterData({ ...registerData, grade_level: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300 bg-white"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(grade => (
                       <option key={grade} value={grade}>Grade {grade}</option>
@@ -307,13 +352,13 @@ export default function Login() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="language" className="block mb-2 font-semibold text-gray-700 text-sm">Language *</label>
+                  <label htmlFor="language" className="block mb-2 font-semibold text-gray-800 text-sm">Language *</label>
                   <select
                     id="language"
                     required
                     value={registerData.language}
                     onChange={(e) => setRegisterData({ ...registerData, language: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300 bg-white"
                   >
                     <option value="sinhala">Sinhala</option>
                     <option value="english">English</option>
@@ -324,24 +369,24 @@ export default function Login() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="birthday" className="block mb-2 font-semibold text-gray-700 text-sm">Birthday *</label>
+                  <label htmlFor="birthday" className="block mb-2 font-semibold text-gray-800 text-sm">Birthday *</label>
                   <input
                     id="birthday"
                     type="date"
                     required
                     value={registerData.birthday}
                     onChange={(e) => setRegisterData({ ...registerData, birthday: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300 bg-white"
                   />
                 </div>
                 <div>
-                  <label htmlFor="gender" className="block mb-2 font-semibold text-gray-700 text-sm">Gender *</label>
+                  <label htmlFor="gender" className="block mb-2 font-semibold text-gray-800 text-sm">Gender *</label>
                   <select
                     id="gender"
                     required
                     value={registerData.gender}
                     onChange={(e) => setRegisterData({ ...registerData, gender: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-100 hover:border-gray-300 bg-white"
                   >
                     <option value="">Select Gender</option>
                     <option value="male">Male</option>
@@ -353,9 +398,10 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-br from-primary-500 to-secondary-500 text-white rounded-lg text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none mt-4"
+                className="relative group w-full py-4 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 text-white rounded-xl text-base font-semibold transition-all duration-300 hover:shadow-premium hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none overflow-hidden shadow-md mt-6"
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
+                <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-30"></div>
+                <span className="relative z-10">{loading ? 'Creating Account...' : 'Create Account'}</span>
               </button>
             </form>
           )}
