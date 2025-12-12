@@ -12,7 +12,6 @@ export default function Chat() {
   const vantaEffect = useRef<any>(null);
   const [user, setUser] = useState<User | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [currentMode, setCurrentMode] = useState<'session' | 'stateless'>('session');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -124,23 +123,6 @@ export default function Chat() {
     addMessage('assistant', `❌ Error: ${message}`);
   };
 
-  const handleModeChange = async (mode: 'session' | 'stateless') => {
-    setCurrentMode(mode);
-    setMessages([]);
-    
-    if (mode === 'session') {
-      await initSession();
-    } else {
-      setSessionId(null);
-      addMessage('assistant', 'Stateless mode activated. Each message will be independent.');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    navigate('/login');
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
@@ -151,9 +133,9 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
-      const response = await chatApi.sendMessage(sessionId, userMessage, currentMode);
+      const response = await chatApi.sendMessage(sessionId, userMessage, 'session');
       
-      if (currentMode === 'session' && response.session_id) {
+      if (response.session_id) {
         setSessionId(response.session_id);
       }
       
@@ -179,74 +161,42 @@ export default function Chat() {
       <div className="fixed inset-0 z-0 backdrop-blur-sm bg-black/10"></div>
 
       {/* Gemini-style Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-red-900/30 backdrop-blur-md border-b border-red-500/30">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-yellow-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">🇱🇰</span>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 group cursor-pointer">
+            <div className="w-7 h-7 bg-gradient-to-br from-red-500 to-yellow-500 rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white font-bold text-xs">🇱🇰</span>
             </div>
-            <h1 className="text-xl font-semibold bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
-              Learning Assistant
+            <h1 className="text-lg font-semibold bg-gradient-to-r from-white via-yellow-200 to-red-300 bg-clip-text text-transparent drop-shadow-lg group-hover:from-yellow-200 group-hover:via-white group-hover:to-yellow-300 transition-all duration-300">
+              ICT Mahagedara
             </h1>
-          </div>
+          </Link>
           
-          <div className="flex items-center gap-4">
-            {/* Mode Toggle */}
-            <div className="flex items-center gap-2 bg-red-800/50 rounded-full p-1">
-              <button
-                onClick={() => handleModeChange('session')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  currentMode === 'session'
-                    ? 'bg-gradient-to-r from-red-600 to-yellow-600 text-white shadow-sm'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                Session
-              </button>
-              <button
-                onClick={() => handleModeChange('stateless')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  currentMode === 'stateless'
-                    ? 'bg-gradient-to-r from-red-600 to-yellow-600 text-white shadow-sm'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                Stateless
-              </button>
-            </div>
-
+          <div className="flex items-center gap-2 mt-2">
             {user && (
-              <div className="flex items-center gap-2 text-sm text-white">
-                <span className="hidden md:inline">{user.first_name}</span>
-                <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-yellow-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+              <Link
+                to="/profile"
+                className="flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-red-900/30 to-yellow-900/30 border border-red-500/30 hover:border-yellow-500/50 hover:bg-gradient-to-r hover:from-red-900/40 hover:to-yellow-900/40 transition-all duration-300 group backdrop-blur-sm"
+                title={user.first_name}
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-yellow-500 rounded-full flex items-center justify-center text-white font-medium text-sm group-hover:scale-110 transition-transform duration-300">
                   {user.first_name.charAt(0)}
                 </div>
-              </div>
+                <span className="text-white font-medium text-sm bg-gradient-to-r from-white to-yellow-200 bg-clip-text text-transparent group-hover:from-yellow-200 group-hover:to-white transition-all duration-300">
+                  {user.first_name}
+                </span>
+              </Link>
             )}
-            
-            <Link
-              to="/profile"
-              className="text-sm text-gray-200 hover:text-white font-medium"
-            >
-              Profile
-            </Link>
-            
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-200 hover:text-white font-medium"
-            >
-              Logout
-            </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="pt-16 min-h-screen flex flex-col relative z-10">
-        <div className="flex-1 w-full max-w-3xl mx-auto px-6 pb-32">
+      <main className="fixed top-16 bottom-0 left-0 right-0 overflow-y-auto z-10">
+        <div className="w-full max-w-3xl mx-auto px-6 pb-32 pt-4">
           {messages.length === 0 ? (
             /* Welcome Screen */
-            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-16rem)] text-center">
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-14rem)] text-center">
               <div className="mb-12">
                 <h2 className="text-5xl font-semibold mb-4 bg-gradient-to-r from-red-400 via-yellow-400 to-red-400 bg-clip-text text-transparent">
                   Hello, {user?.first_name || 'there'}
@@ -260,9 +210,9 @@ export default function Chat() {
                   <button
                     key={index}
                     onClick={() => handleSuggestedPrompt(prompt)}
-                    className="p-4 text-left rounded-2xl border border-red-500/30 bg-red-900/20 hover:bg-red-800/40 transition-all duration-200 hover:shadow-lg hover:border-yellow-500/50 group backdrop-blur-sm"
+                    className="p-4 text-left rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 group backdrop-blur-sm"
                   >
-                    <p className="text-white group-hover:text-white">{prompt}</p>
+                    <p className="text-white">{prompt}</p>
                   </button>
                 ))}
               </div>
