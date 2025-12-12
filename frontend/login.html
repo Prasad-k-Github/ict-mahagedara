@@ -231,6 +231,10 @@
         width: 100%;
         background: #00c851;
       }
+
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -248,16 +252,8 @@
       <div class="auth-content">
         <!-- Login Form -->
         <div class="form-section active" id="login-section">
-          <div
-            id="login-error"
-            class="error-message"
-            style="display: none"
-          ></div>
-          <div
-            id="login-success"
-            class="success-message"
-            style="display: none"
-          ></div>
+          <div id="login-error" class="error-message hidden"></div>
+          <div id="login-success" class="success-message hidden"></div>
 
           <form id="login-form">
             <div class="form-group">
@@ -290,16 +286,8 @@
 
         <!-- Register Form -->
         <div class="form-section" id="register-section">
-          <div
-            id="register-error"
-            class="error-message"
-            style="display: none"
-          ></div>
-          <div
-            id="register-success"
-            class="success-message"
-            style="display: none"
-          ></div>
+          <div id="register-error" class="error-message hidden"></div>
+          <div id="register-success" class="success-message hidden"></div>
 
           <form id="register-form">
             <div class="form-group">
