@@ -94,9 +94,40 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 20px;
-        text-align: center;
-        font-size: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-title {
+        font-size: 20px;
         font-weight: bold;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 14px;
+      }
+
+      .user-name {
+        opacity: 0.9;
+      }
+
+      .logout-btn {
+        padding: 6px 16px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.3s;
+      }
+
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
       }
 
       .chat-mode {
@@ -351,7 +382,13 @@
   <body>
     <div class="chat-container">
       <div class="chat-header">
-        Prasad K. Gamage - Sri Lankan Students Learning Assistant 🇱🇰
+        <div class="header-title">
+          Prasad K. Gamage - Sri Lankan Students Learning Assistant 🇱🇰
+        </div>
+        <div class="user-info">
+          <span class="user-name" id="userName">Guest</span>
+          <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
       </div>
       <div class="chat-mode">
         <button class="mode-btn active" data-mode="session">
@@ -386,18 +423,79 @@
       let sessionId = null;
       let currentMode = "session";
       let isLoading = false;
+      let currentUser = null;
+      let accessToken = null;
 
       const chatMessages = document.getElementById("chatMessages");
       const messageInput = document.getElementById("messageInput");
       const sendBtn = document.getElementById("sendBtn");
       const modeButtons = document.querySelectorAll(".mode-btn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const userNameElement = document.getElementById("userName");
+
+      // Check authentication on page load
+      async function checkAuth() {
+        accessToken = localStorage.getItem("access_token");
+
+        if (!accessToken) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Invalid token");
+          }
+
+          currentUser = await response.json();
+          userNameElement.textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+          console.log("Logged in as:", currentUser.email);
+        } catch (error) {
+          console.error("Authentication failed:", error);
+          localStorage.clear();
+          window.location.href = "login.html";
+        }
+      }
+
+      // Logout function
+      logoutBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to logout?")) {
+          localStorage.clear();
+          window.location.href = "login.html";
+        }
+      });
 
       // Initialize session on load
       async function initSession() {
         try {
+          const accessToken = localStorage.getItem("access_token");
+          if (!accessToken) {
+            showError("Please login to start a chat session");
+            window.location.href = "login.html";
+            return;
+          }
+
           const response = await fetch(`${API_URL}/chat/session`, {
             method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
           });
+
+          if (response.status === 401) {
+            showError("Session expired. Please login again.");
+            localStorage.clear();
+            window.location.href = "login.html";
+            return;
+          }
+
           const data = await response.json();
           sessionId = data.session_id;
           console.log("Session initialized:", sessionId);
@@ -521,6 +619,7 @@
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
               },
               body: JSON.stringify({ message }),
             });
@@ -530,6 +629,7 @@
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
               },
               body: JSON.stringify({ message }),
             });
@@ -564,8 +664,13 @@
       });
 
       // Initialize on load
-      initSession();
-      messageInput.focus();
+      checkAuth().then(() => {
+        // Only initialize session if in session mode
+        if (currentMode === "session") {
+          initSession();
+        }
+        messageInput.focus();
+      });
     </script>
   </body>
 </html>

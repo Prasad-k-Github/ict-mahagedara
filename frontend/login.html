@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Prasad K. Gamage Learning Assistant</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .auth-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 450px;
+        overflow: hidden;
+      }
+
+      .auth-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+      }
+
+      .auth-header h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .auth-header p {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .auth-tabs {
+        display: flex;
+        background: #f5f5f5;
+        border-bottom: 2px solid #ddd;
+      }
+
+      .tab {
+        flex: 1;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        font-size: 16px;
+        font-weight: 600;
+        color: #666;
+        transition: all 0.3s;
+      }
+
+      .tab.active {
+        background: white;
+        color: #667eea;
+        border-bottom: 3px solid #667eea;
+      }
+
+      .auth-content {
+        padding: 30px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: border-color 0.3s;
+        font-family: inherit;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .error-message {
+        background: #fee;
+        color: #c33;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        border: 1px solid #fcc;
+      }
+
+      .success-message {
+        background: #efe;
+        color: #3c3;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        border: 1px solid #cfc;
+      }
+
+      .form-section {
+        display: none;
+      }
+
+      .form-section.active {
+        display: block;
+      }
+
+      .info-text {
+        font-size: 13px;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .grade-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .grade-option {
+        padding: 8px;
+        background: #f5f5f5;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        text-align: center;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
+
+      .grade-option:hover {
+        background: #e8e8ff;
+        border-color: #667eea;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .password-strength {
+        height: 4px;
+        background: #ddd;
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+
+      .password-strength-bar {
+        height: 100%;
+        width: 0;
+        transition: all 0.3s;
+      }
+
+      .strength-weak {
+        width: 33%;
+        background: #ff4444;
+      }
+
+      .strength-medium {
+        width: 66%;
+        background: #ffbb33;
+      }
+
+      .strength-strong {
+        width: 100%;
+        background: #00c851;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1>🇱🇰 Prasad K. Gamage</h1>
+        <p>Learning Assistant for Sri Lankan Students</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="tab active" data-tab="login">Login</button>
+        <button class="tab" data-tab="register">Register</button>
+      </div>
+
+      <div class="auth-content">
+        <!-- Login Form -->
+        <div class="form-section active" id="login-section">
+          <div
+            id="login-error"
+            class="error-message"
+            style="display: none"
+          ></div>
+          <div
+            id="login-success"
+            class="success-message"
+            style="display: none"
+          ></div>
+
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input
+                type="email"
+                id="login-email"
+                name="email"
+                required
+                autocomplete="email"
+                placeholder="Enter your email"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                required
+                autocomplete="current-password"
+                placeholder="Enter your password"
+              />
+            </div>
+
+            <button type="submit" class="btn" id="login-btn">Login</button>
+          </form>
+        </div>
+
+        <!-- Register Form -->
+        <div class="form-section" id="register-section">
+          <div
+            id="register-error"
+            class="error-message"
+            style="display: none"
+          ></div>
+          <div
+            id="register-success"
+            class="success-message"
+            style="display: none"
+          ></div>
+
+          <form id="register-form">
+            <div class="form-group">
+              <label for="register-firstname">First Name *</label>
+              <input
+                type="text"
+                id="register-firstname"
+                name="first_name"
+                required
+                placeholder="Enter your first name"
+                maxlength="50"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="register-lastname">Last Name *</label>
+              <input
+                type="text"
+                id="register-lastname"
+                name="last_name"
+                required
+                placeholder="Enter your last name"
+                maxlength="50"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="register-email">Email *</label>
+              <input
+                type="email"
+                id="register-email"
+                name="email"
+                required
+                autocomplete="email"
+                placeholder="your.email@example.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="register-phone">Phone Number *</label>
+              <input
+                type="tel"
+                id="register-phone"
+                name="phone_number"
+                required
+                placeholder="07XXXXXXXX"
+                minlength="10"
+                maxlength="20"
+              />
+              <p class="info-text">Enter 10+ digit phone number</p>
+            </div>
+
+            <div class="form-group">
+              <label for="register-birthday">Date of Birth *</label>
+              <input
+                type="date"
+                id="register-birthday"
+                name="birthday"
+                required
+                max="2020-12-31"
+              />
+              <p class="info-text">Must be at least 5 years old</p>
+            </div>
+
+            <div class="form-group">
+              <label for="register-gender">Gender *</label>
+              <select id="register-gender" name="gender" required>
+                <option value="">Select your gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="register-grade">Grade Level (1-12) *</label>
+              <select id="register-grade" name="grade_level" required>
+                <option value="">Select your grade</option>
+                <option value="1">Grade 1</option>
+                <option value="2">Grade 2</option>
+                <option value="3">Grade 3</option>
+                <option value="4">Grade 4</option>
+                <option value="5">Grade 5</option>
+                <option value="6">Grade 6</option>
+                <option value="7">Grade 7</option>
+                <option value="8">Grade 8</option>
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
+                <option value="11">Grade 11</option>
+                <option value="12">Grade 12</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="register-language">Language *</label>
+              <select id="register-language" name="language" required>
+                <option value="">Select your preferred language</option>
+                <option value="Sinhala">Sinhala (සිංහල)</option>
+                <option value="English">English</option>
+                <option value="Tamil">Tamil (தமிழ்)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="register-password">Create Password *</label>
+              <input
+                type="password"
+                id="register-password"
+                name="password"
+                required
+                autocomplete="new-password"
+                placeholder="At least 6 characters"
+                minlength="6"
+              />
+              <div class="password-strength">
+                <div
+                  class="password-strength-bar"
+                  id="password-strength-bar"
+                ></div>
+              </div>
+              <p class="info-text" id="password-strength-text">
+                Minimum 6 characters
+              </p>
+            </div>
+
+            <div class="form-group">
+              <label for="register-confirm-password">Confirm Password *</label>
+              <input
+                type="password"
+                id="register-confirm-password"
+                name="confirm_password"
+                required
+                autocomplete="new-password"
+                placeholder="Re-enter your password"
+                minlength="6"
+              />
+              <p class="info-text" id="password-match-text"></p>
+            </div>
+
+            <button type="submit" class="btn" id="register-btn">
+              Register
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8000";
+
+      // Tab switching
+      const tabs = document.querySelectorAll(".tab");
+      const sections = document.querySelectorAll(".form-section");
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const targetTab = tab.dataset.tab;
+
+          tabs.forEach((t) => t.classList.remove("active"));
+          sections.forEach((s) => s.classList.remove("active"));
+
+          tab.classList.add("active");
+          document
+            .getElementById(`${targetTab}-section`)
+            .classList.add("active");
+
+          // Clear messages
+          hideMessage("login-error");
+          hideMessage("login-success");
+          hideMessage("register-error");
+          hideMessage("register-success");
+        });
+      });
+
+      // Password strength checker
+      const passwordInput = document.getElementById("register-password");
+      const confirmPasswordInput = document.getElementById(
+        "register-confirm-password"
+      );
+      const strengthBar = document.getElementById("password-strength-bar");
+      const strengthText = document.getElementById("password-strength-text");
+      const matchText = document.getElementById("password-match-text");
+
+      passwordInput.addEventListener("input", () => {
+        const password = passwordInput.value;
+        let strength = 0;
+
+        if (password.length >= 6) strength++;
+        if (password.length >= 10) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/\d/.test(password)) strength++;
+        if (/[^a-zA-Z\d]/.test(password)) strength++;
+
+        strengthBar.className = "password-strength-bar";
+
+        if (strength <= 2) {
+          strengthBar.classList.add("strength-weak");
+          strengthText.textContent = "Weak password";
+          strengthText.style.color = "#ff4444";
+        } else if (strength <= 4) {
+          strengthBar.classList.add("strength-medium");
+          strengthText.textContent = "Medium password";
+          strengthText.style.color = "#ffbb33";
+        } else {
+          strengthBar.classList.add("strength-strong");
+          strengthText.textContent = "Strong password";
+          strengthText.style.color = "#00c851";
+        }
+
+        // Check password match if confirm password has value
+        if (confirmPasswordInput.value) {
+          checkPasswordMatch();
+        }
+      });
+
+      // Password match checker
+      confirmPasswordInput.addEventListener("input", checkPasswordMatch);
+
+      function checkPasswordMatch() {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        if (confirmPassword === "") {
+          matchText.textContent = "";
+          matchText.style.color = "#666";
+        } else if (password === confirmPassword) {
+          matchText.textContent = "✓ Passwords match";
+          matchText.style.color = "#00c851";
+        } else {
+          matchText.textContent = "✗ Passwords do not match";
+          matchText.style.color = "#ff4444";
+        }
+      }
+
+      // Helper functions
+      function showMessage(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.style.display = "block";
+      }
+
+      function hideMessage(elementId) {
+        const element = document.getElementById(elementId);
+        element.style.display = "none";
+      }
+
+      function setButtonLoading(buttonId, isLoading) {
+        const button = document.getElementById(buttonId);
+        if (isLoading) {
+          button.disabled = true;
+          button.innerHTML = '<span class="loading"></span>';
+        } else {
+          button.disabled = false;
+          button.textContent = buttonId === "login-btn" ? "Login" : "Register";
+        }
+      }
+
+      // Login form
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          hideMessage("login-error");
+          hideMessage("login-success");
+
+          const formData = new FormData(e.target);
+          const data = {
+            email: formData.get("email").trim(),
+            password: formData.get("password"),
+          };
+
+          setButtonLoading("login-btn", true);
+
+          try {
+            const response = await fetch(`${API_URL}/auth/login`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              throw new Error(result.detail || "Login failed");
+            }
+
+            // Store token and user info
+            localStorage.setItem("access_token", result.access_token);
+            localStorage.setItem("user_id", result.user_id);
+            localStorage.setItem("username", result.username);
+            localStorage.setItem("email", result.email);
+
+            showMessage("login-success", "Login successful! Redirecting...");
+
+            // Redirect to chat
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 1000);
+          } catch (error) {
+            showMessage("login-error", error.message);
+          } finally {
+            setButtonLoading("login-btn", false);
+          }
+        });
+
+      // Register form
+      document
+        .getElementById("register-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          hideMessage("register-error");
+          hideMessage("register-success");
+
+          const formData = new FormData(e.target);
+
+          // Check if passwords match
+          const password = formData.get("password");
+          const confirmPassword = formData.get("confirm_password");
+
+          if (password !== confirmPassword) {
+            showMessage("register-error", "Passwords do not match!");
+            return;
+          }
+
+          const data = {
+            first_name: formData.get("first_name").trim(),
+            last_name: formData.get("last_name").trim(),
+            email: formData.get("email").trim(),
+            phone_number: formData.get("phone_number").trim(),
+            birthday: formData.get("birthday"),
+            gender: formData.get("gender"),
+            grade_level: parseInt(formData.get("grade_level")),
+            language: formData.get("language"),
+            password: password,
+            confirm_password: confirmPassword,
+          };
+
+          setButtonLoading("register-btn", true);
+
+          try {
+            const response = await fetch(`${API_URL}/auth/register`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              throw new Error(result.detail || "Registration failed");
+            }
+
+            showMessage(
+              "register-success",
+              "Registration successful! Please login with your credentials."
+            );
+
+            // Clear form
+            e.target.reset();
+            strengthBar.className = "password-strength-bar";
+            strengthText.textContent = "Minimum 6 characters";
+            strengthText.style.color = "#666";
+
+            // Switch to login tab after 2 seconds
+            setTimeout(() => {
+              tabs[0].click();
+            }, 2000);
+          } catch (error) {
+            showMessage("register-error", error.message);
+          } finally {
+            setButtonLoading("register-btn", false);
+          }
+        });
+
+      // Check if already logged in
+      window.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          // Verify token is valid
+          fetch(`${API_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .then((response) => {
+              if (response.ok) {
+                window.location.href = "index.html";
+              } else {
+                localStorage.clear();
+              }
+            })
+            .catch(() => {
+              localStorage.clear();
+            });
+        }
+      });
+    </script>
+  </body>
+</html>
