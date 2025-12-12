@@ -168,15 +168,30 @@ export default function Profile() {
             <h1 className="text-xl font-semibold text-gray-900">Profile Settings</h1>
           </div>
           
-          <Link
-            to="/"
-            className="text-sm text-gray-700 hover:text-gray-900 font-medium flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Chat
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              to="/"
+              className="text-sm text-gray-700 hover:text-gray-900 font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Chat
+            </Link>
+            
+            <button
+              onClick={() => {
+                localStorage.removeItem('access_token');
+                navigate('/login');
+              }}
+              className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
