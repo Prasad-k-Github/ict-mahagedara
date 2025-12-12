@@ -2,7 +2,54 @@
   "hash": "9dbac79e",
   "configHash": "88a33366",
   "lockfileHash": "7636d78c",
-  "browserHash": "b12e37a8",
-  "optimized": {},
-  "chunks": {}
+  "browserHash": "2ec3567f",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "acbe3703",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "43af51c2",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "251b1a87",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "794c0c06",
+      "needsInterop": false
+    },
+    "marked": {
+      "src": "../../node_modules/marked/lib/marked.esm.js",
+      "file": "marked.js",
+      "fileHash": "98353d4f",
+      "needsInterop": false
+    },
+    "highlight.js": {
+      "src": "../../node_modules/highlight.js/es/index.js",
+      "file": "highlight__js.js",
+      "fileHash": "b8b31334",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-4FKDD6AE": {
+      "file": "chunk-4FKDD6AE.js"
+    },
+    "chunk-XQV2XCQM": {
+      "file": "chunk-XQV2XCQM.js"
+    },
+    "chunk-5WRI5ZAA": {
+      "file": "chunk-5WRI5ZAA.js"
+    }
+  }
 }
